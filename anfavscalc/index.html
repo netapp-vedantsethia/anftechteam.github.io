@@ -5,11 +5,12 @@
 <!doctype html>
 <html lang="en">
    <head>
-      <!-- Required meta tags -->
       <meta charset="utf-8">
+      <meta name="description" content="Azure NetApp Files with Azure VMware Solution TCO Estimator">
+      <meta name="keywords" content="NetApp, Azure, ANF, AVS, TCO">
+      <meta name="author" content="Vedant Sethia, Dhruv Tyagi, Mohamed Niyaz">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
       <link rel="shortcut icon" href="favicon.ico">
-      <!-- Bootstrap CSS -->
       <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
       <title>ANF AVS TCO Calculator</title>
       <style media="screen">
@@ -26,7 +27,7 @@
          opacity: 0.3;
          font-size: 6em;
          width: 100%;
-         top: 63%;    
+         top: 63%;
          text-align: center;
          z-index: 0;
          }
@@ -93,7 +94,7 @@
 
              //Driven by Memory
              totmemreq = vmcount * vramvm;
-             hostreqpercalc = totmemreq / 460.80; //80% of 576
+             hostreqpercalc = totmemreq / 460.80;
 
              //Driven by Storage
              rawcap = 1920 * 8 * ondiskformat / 100;
@@ -141,10 +142,10 @@
              }
 
              //tot cap vSAN
-             totcapvsan1 = finalhostcount * 15.36 * 90 / 100;
-             totcapvsan2 = finalhostcountstrg * 15.36 * 90 / 100;
-             totcapvsan3 = finalhostcountanf * 15.36 * 90 / 100;
-             totcapvsan5 = 15.36 * 3;
+             totcapvsan1 = finalhostcount * 15.36 * ondiskformat / 100;
+             totcapvsan2 = finalhostcountstrg * 15.36 * ondiskformat / 100;
+             totcapvsan3 = finalhostcountanf * 15.36 * ondiskformat / 100;
+             totcapvsan5 = 15.36 * (ondiskformat / 100) * 3;
 
              //vsan Overhead
              vsanoverhead1 = totcapvsan1 * 30 / 100;
@@ -153,17 +154,23 @@
              vsanoverhead5 = totcapvsan5 * 25 / 100;
 
              //space consumed vm vsan
+             spaceconvmvsanonly = (totcapvsan2 - vsanoverhead2) * storagepolicycalc / 100;
              spaceconvmvsan = (totcapvsan3 - vsanoverhead3) * storagepolicycalc / 100;
              spaceconvmanf = totcapreq2 - spaceconvmvsan;
              if(spaceconvmanf < 0){
                spaceconvmanf = 0;
              }
+             spaceconvmvsandrlight = (totcapvsan5 - vsanoverhead5) * 50 / 100;
+             spaceconvmanfdrlight = totcapreq2 - spaceconvmvsandrlight;
+             if(spaceconvmanfdrlight < 0){
+               spaceconvmanfdrlight = 0;
+             }
 
              //free space
              freespaceav1 = totcapvsan1 - (vsanoverhead1 + totcapreq1);
-             freespaceav2 = totcapvsan2 - (vsanoverhead2 + totcapreq2);
+             freespaceav2 = totcapvsan2 - (vsanoverhead2 + spaceconvmvsanonly);
              freespaceav3 = totcapvsan3 - (vsanoverhead3 + spaceconvmvsan);
-             freespaceav5 = totcapvsan5 - (vsanoverhead5 + 20);
+             freespaceav5 = totcapvsan5 - (vsanoverhead5 + spaceconvmvsandrlight);
 
 
              //free space percent vsan
@@ -207,7 +214,7 @@
 
              //tcooneyearanf4 = stddsfin + premiumdsfin1;
              tcooneyearanf4 = premiumdsfin1 + stddsfin;
-             tcooneyearanf5 = totcapreq2 * 0.16206 * 1024 * 12;
+             tcooneyearanf5 = spaceconvmanfdrlight * 0.16206 * 1024 * 12;
              tcooneyearanf7 = spaceconvmanf * 0.16206 * 1024 * 12;
              tcooneyearanf9 = ultrsdsfin + premiumdsfin;
 
@@ -242,23 +249,6 @@
                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
              }
 
-             /*document.getElementById("avs1_vmcount").innerText = vmcount;
-             document.getElementById("avs2_vmcount").innerText = vmcount;
-             document.getElementById("avs3_vmcount").innerText = vmcount;
-             document.getElementById("avs4_vmcount").innerText = vmcount;
-             document.getElementById("avs5_vmcount").innerText = vmcount;
-             document.getElementById("avs6_vmcount").innerText = vmcount;
-             document.getElementById("avs7_vmcount").innerText = vmcount;
-
-             document.getElementById("avs1_storagevm").innerText = utilstoragevm;
-             document.getElementById("avs2_storagevm").innerText = Math.round(addstrvmvsan);
-             document.getElementById("avs3_storagevm").innerText = Math.round(addstrvmvsan);
-             document.getElementById("avs4_storagevm").innerText = Math.round(addstrvmvsan);
-             document.getElementById("avs5_storagevm").innerText = Math.round(addstrvmvsan);
-             document.getElementById("avs6_storagevm").innerText = Math.round(addstrvmvsan);
-             document.getElementById("avs7_storagevm").innerText = utilstoragevm;*/
-
-             //document.getElementById("avs1_totcapreq").innerText = Math.round(totcapreq1);
              document.getElementById("avs2_totcapreq").innerText = Math.round(totcapreq2);
              document.getElementById("avs3_totcapreq").innerText = Math.round(totcapreq2);
              document.getElementById("avs4_totcapreq").innerText = Math.round(totcapreq2);
@@ -268,15 +258,6 @@
              document.getElementById("avs8_totcapreq").innerText = Math.round(totcapreq2);
              document.getElementById("avs9_totcapreq").innerText = Math.round(totcapreq2);
 
-             //document.getElementById("avs1_totcapreqvsan").innerText = Math.round(totcapreq1);
-             //document.getElementById("avs2_totcapreqvsan").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs3_totcapreqvsan").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs4_totcapreqvsan").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs5_totcapreqvsan").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs6_totcapreqvsan").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs7_totcapreqvsan").innerText = Math.round(totcapreq1);
-
-             //document.getElementById("avs1_hostcount").innerText = Math.round(finalhostcount);
              document.getElementById("avs2_hostcount").innerText = Math.round(finalhostcountstrg);
              document.getElementById("avs3_hostcount").innerText = Math.round(finalhostcountanf);
              document.getElementById("avs4_hostcount").innerText = Math.round(finalhostcountanf);
@@ -286,7 +267,6 @@
              document.getElementById("avs8_hostcount").innerText = Math.round(finalhostcountanf);
              document.getElementById("avs9_hostcount").innerText = Math.round(finalhostcountanf);
 
-             //document.getElementById("avs1_totcapvsan").innerText = Math.round(totcapvsan1);
              document.getElementById("avs2_totcapvsan").innerText = Math.round(totcapvsan2);
              document.getElementById("avs3_totcapvsan").innerText = Math.round(totcapvsan3);
              document.getElementById("avs4_totcapvsan").innerText = Math.round(totcapvsan3);
@@ -296,45 +276,24 @@
              document.getElementById("avs8_totcapvsan").innerText = Math.round(totcapvsan3);
              document.getElementById("avs9_totcapvsan").innerText = Math.round(totcapvsan3);
 
-             //document.getElementById("avs1_vsanover").innerText = Math.round(vsanoverhead1);
-             //document.getElementById("avs2_vsanover").innerText = Math.round(vsanoverhead2);
-             //document.getElementById("avs3_vsanover").innerText = Math.round(vsanoverhead3);
-             //document.getElementById("avs4_vsanover").innerText = Math.round(vsanoverhead3);
-             //document.getElementById("avs5_vsanover").innerText = Math.round(vsanoverhead5);
-             //document.getElementById("avs6_vsanover").innerText = "0";
-             //document.getElementById("avs7_vsanover").innerText = Math.round(vsanoverhead3);
-             //document.getElementById("avs8_vsanover").innerText = Math.round(vsanoverhead3);
-             //document.getElementById("avs9_vsanover").innerText = Math.round(vsanoverhead3);
-
-             //document.getElementById("avs1_reqvmspace").innerText = Math.round(totcapreq1);
-             //document.getElementById("avs2_reqvmspace").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs3_reqvmspace").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs4_reqvmspace").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs5_reqvmspace").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs6_reqvmspace").innerText = Math.round(totcapreq2);
-             //document.getElementById("avs7_reqvmspace").innerText = Math.round(totcapreq1);
-
-             //document.getElementById("avs1_spacevmvsan").innerText = Math.round(totcapreq1);
-             document.getElementById("avs2_spacevmvsan").innerText = Math.round(totcapreq2);
+             document.getElementById("avs2_spacevmvsan").innerText = Math.round(spaceconvmvsanonly);
              document.getElementById("avs3_spacevmvsan").innerText = Math.round(spaceconvmvsan);
              document.getElementById("avs4_spacevmvsan").innerText = Math.round(spaceconvmvsan);
-             document.getElementById("avs5_spacevmvsan").innerText = "20";
+             document.getElementById("avs5_spacevmvsan").innerText = Math.round(spaceconvmvsandrlight);
              document.getElementById("avs6_spacevmvsan").innerText = "N/A";
              document.getElementById("avs7_spacevmvsan").innerText = Math.round(spaceconvmvsan);
              document.getElementById("avs8_spacevmvsan").innerText = Math.round(spaceconvmvsan);
              document.getElementById("avs9_spacevmvsan").innerText = Math.round(spaceconvmvsan);
 
-             //document.getElementById("avs1_spacevmanf").innerText = "N/A";
              document.getElementById("avs2_spacevmanf").innerText = "N/A";
              document.getElementById("avs3_spacevmanf").innerText = Math.round(spaceconvmanf);
              document.getElementById("avs4_spacevmanf").innerText = Math.round(spaceconvmanf);
-             document.getElementById("avs5_spacevmanf").innerText = Math.round(totcapreq2);
+             document.getElementById("avs5_spacevmanf").innerText = Math.round(spaceconvmanfdrlight);
              document.getElementById("avs6_spacevmanf").innerText = Math.round(totcapreq2);
              document.getElementById("avs7_spacevmanf").innerText = Math.round(spaceconvmanf);
              document.getElementById("avs8_spacevmanf").innerText = Math.round(spaceconvmanf);
              document.getElementById("avs9_spacevmanf").innerText = Math.round(spaceconvmanf);
 
-             //document.getElementById("avs1_spacefree").innerText = Math.round(freespaceav1)+" ("+Math.round(freespaceper1) + "%)";
              document.getElementById("avs2_spacefree").innerText = Math.round(freespaceav2)+" ("+Math.round(freespaceper2) + "%)";
              document.getElementById("avs3_spacefree").innerText = Math.round(freespaceav3)+" ("+Math.round(freespaceper3) + "%)";
              document.getElementById("avs4_spacefree").innerText = Math.round(freespaceav3)+" ("+Math.round(freespaceper3) + "%)";
@@ -344,20 +303,6 @@
              document.getElementById("avs8_spacefree").innerText = Math.round(freespaceav3)+" ("+Math.round(freespaceper3) + "%)";
              document.getElementById("avs9_spacefree").innerText = Math.round(freespaceav3)+" ("+Math.round(freespaceper3) + "%)";
 
-             /*document.getElementById("avs1_spacefreepervsan").innerText = Math.round(freespaceper1) + "%";
-             document.getElementById("avs2_spacefreepervsan").innerText = Math.round(freespaceper2) + "%";
-             document.getElementById("avs3_spacefreepervsan").innerText = Math.round(freespaceper3) + "%";
-             document.getElementById("avs4_spacefreepervsan").innerText = Math.round(freespaceper3) + "%";
-             document.getElementById("avs5_spacefreepervsan").innerText = Math.round(freespaceper5) + "%";
-             document.getElementById("avs6_spacefreepervsan").innerText = "N/A";
-             document.getElementById("avs7_spacefreepervsan").innerText = Math.round(freespaceper3) + "%";*/
-
-             //changing the background backgroundColor
-             //if(Math.round(freespaceper1) <= 20){
-             //  document.getElementById("avs1_spacefree").classList.add('bg-danger','text-white');
-             //} else{
-             //  document.getElementById("avs1_spacefree").classList.remove('bg-danger','text-white');
-             //}
              if (Math.round(freespaceper2) <= 20) {
                document.getElementById("avs2_spacefree").classList.add('bg-danger','text-white');
              } else{
@@ -365,7 +310,6 @@
              }
 
              document.getElementById("avs1_profile").innerText = "AVS-vSAN only - " + profile;
-             //document.getElementById("avs2_profile").innerText = "AVS-vSAN with additional capacity";
              document.getElementById("avs3_profile").innerText = "AVS-vSAN with ANF premium tier";
              document.getElementById("avs4_profile").innerText = "AVS-vSAN with ANF premium/standard tier (perf optimized)";
              document.getElementById("avs5_profile").innerText = "AVS-vSAN with ANF standard tier w/ minimum host configuration";
@@ -374,7 +318,6 @@
              document.getElementById("avs8_profile").innerText = "AVS-vSAN with ANF ultra tier";
              document.getElementById("avs9_profile").innerText = "AVS-vSAN with ANF ultra/premium tier (Perf optimized)";
 
-             //document.getElementById("avs1_tcoavs").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs1));
              document.getElementById("avs2_tcoavs").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs2));
              document.getElementById("avs3_tcoavs").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs3));
              document.getElementById("avs4_tcoavs").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs3));
@@ -384,7 +327,6 @@
              document.getElementById("avs8_tcoavs").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs3));
              document.getElementById("avs9_tcoavs").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs3));
 
-             //document.getElementById("avs1_tcoanf").innerText = "N/A";
              document.getElementById("avs2_tcoanf").innerText = "N/A";
              document.getElementById("avs3_tcoanf").innerText = "$" + numberWithCommas(Math.round(tcooneyearanf3));
              document.getElementById("avs4_tcoanf").innerText = "$" + numberWithCommas(Math.round(tcooneyearanf4));
@@ -395,12 +337,10 @@
              document.getElementById("avs9_tcoanf").innerText = "$" + numberWithCommas(Math.round(tcooneyearanf9));
 
              mintco = {
-               //"avs1_tcototal": tcooneyearavs1,
                "avs2_tcototal": tcooneyearavs2,
                "avs3_tcototal": totoneyeartco3,
                "avs4_tcototal": totoneyeartco4,
                "avs5_tcototal": totoneyeartco5,
-               //"avs6_tcototal": tcooneyearanf5,
                "avs7_tcototal": totoneyeartco7,
                "avs8_tcototal": totoneyeartco8,
                "avs9_tcototal": totoneyeartco9
@@ -416,19 +356,6 @@
                }
              }
 
-             //document.getElementById("avs1_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs2_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs3_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs4_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs5_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs6_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs7_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs8_tcototal").classList.remove("bg-success", "text-white");
-             //document.getElementById("avs9_tcototal").classList.remove("bg-success", "text-white");
-
-             //document.getElementById(mintcokey).classList.add("bg-success", "text-white");
-
-             //document.getElementById("avs1_tcototal").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs1));
              document.getElementById("avs2_tcototal").innerText = "$" + numberWithCommas(Math.round(tcooneyearavs2));
              document.getElementById("avs3_tcototal").innerText = "$" + numberWithCommas(Math.round(totoneyeartco3));
              document.getElementById("avs4_tcototal").innerText = "$" + numberWithCommas(Math.round(totoneyeartco4));
@@ -438,14 +365,6 @@
              document.getElementById("avs8_tcototal").innerText = "$" + numberWithCommas(Math.round(totoneyeartco8));
              document.getElementById("avs9_tcototal").innerText = "$" + numberWithCommas(Math.round(totoneyeartco9));
 
-             //document.getElementById("avs1_anfsizing").innerText = "*";
-             //document.getElementById("avs2_anfsizing").innerText = "**";
-             //document.getElementById("avs3_anfsizing").innerText = "#";
-             //document.getElementById("avs4_anfsizing").innerText = "##";
-             //document.getElementById("avs5_anfsizing").innerText = "#*";
-             //document.getElementById("avs6_anfsizing").innerText = "##*";
-
-             //document.getElementById("avs1_tcoopt").innerText = "N/A";
              document.getElementById("avs2_tcoopt").innerText = "N/A";
              document.getElementById("avs3_tcoopt").innerText = Math.ceil(tcoopt3) + "%";
              document.getElementById("avs4_tcoopt").innerText = Math.ceil(tcoopt4) + "%";
@@ -458,71 +377,54 @@
 
              document.getElementById("drivenbycpu").innerText = Math.round(nohostreqcpured);
              document.getElementById("drivenbymemory").innerText = Math.round(hostreqpercalc);
-             //document.getElementById("drivenbystorage").innerText = Math.round(nohostreq);
              document.getElementById("drivenbyaddnstorage").innerText = Math.round(finalhostcountstrg);
 
              if(tcoopt3 <= 0 || document.getElementById('premiumRadio').checked != true){
-               //document.getElementById("anf_premium").classList.add = "d-none";
                document.getElementById("anf_premium").style.display = "none";
                document.getElementById("output_message_pre").innerText = "There is no TCO benefit by adding ANF premium volume based on the inputs provided!";
              } else{
-               //document.getElementById("anf_premium").classList.remove = "d-none";
                document.getElementById("anf_premium").style.display = "table-row";
                document.getElementById("output_message_pre").innerText = "";
              }
 
              if(tcoopt4 <= 0 || document.getElementById('prestdRadio').checked != true){
-               //document.getElementById("anf_ultra").classList.add = "d-none";
                document.getElementById("anf_pre_std").style.display = "none";
-               //document.getElementById("output_message_ult").innerText = "No optimization using ANF Premium + Standard Tier!"
              }else{
-               //document.getElementById("anf_ultra").classList.remove = "d-none";
                document.getElementById("anf_pre_std").style.display = "table-row";
                document.getElementById("output_message_ult").innerText = "";
              }
 
              if(tcoopt5 <= 0){
-               //document.getElementById("anf_ultra").classList.add = "d-none";
                document.getElementById("anf_dr").style.display = "none";
                document.getElementById("output_message_std").innerText = "No optimization using ANF standard DR tier!";
              }else{
-               //document.getElementById("anf_ultra").classList.remove = "d-none";
                document.getElementById("anf_dr").style.display = "table-row";
                document.getElementById("output_message_std").innerText = "";
              }
              if(tcoopt6 <= 0){
-               //document.getElementById("anf_ultra").classList.add = "d-none";
                document.getElementById("anf_dr_zero").style.display = "none";
                document.getElementById("output_message_std_zero").innerText = "No optimization using ANF standard tier zero host footprint!";
              }else{
-               //document.getElementById("anf_ultra").classList.remove = "d-none";
                document.getElementById("anf_dr_zero").style.display = "none"; //table-row
                document.getElementById("output_message_std_zero").innerText = "";
              }
              if(tcoopt7 <= 0 || document.getElementById('standardRadio').checked != true){
-               //document.getElementById("anf_standard").classList.add = "d-none";
                document.getElementById("anf_standard").style.display = "none";
                document.getElementById("output_message_std").innerText = "There is no TCO benefit by adding ANF standard volume based on the inputs provided!";
              }else{
-               //document.getElementById("anf_standard").classList.remove = "d-none";
                document.getElementById("anf_standard").style.display = "table-row";
                document.getElementById("output_message_std").innerText = "";
              }
              if(tcoopt8 <= 0 || document.getElementById('ultraRadio').checked != true){
-               //document.getElementById("anf_standard").classList.add = "d-none";
                document.getElementById("anf_ultra").style.display = "none";
                document.getElementById("output_message_ultra_only").innerText = "There is no TCO benefit by adding ANF ultra volume based on the inputs provided!";
              }else{
-               //document.getElementById("anf_standard").classList.remove = "d-none";
                document.getElementById("anf_ultra").style.display = "table-row";
                document.getElementById("output_message_ultra_only").innerText = "";
              }
              if(tcoopt9 <= 0 || document.getElementById('preultRadio').checked != true){
-               //document.getElementById("anf_standard").classList.add = "d-none";
                document.getElementById("anf_pre_ult").style.display = "none";
-               //document.getElementById("output_message_ultra_only").innerText = "No optimization using ANF Ultra + Premium Tier!"
              }else{
-               //document.getElementById("anf_standard").classList.remove = "d-none";
                document.getElementById("anf_pre_ult").style.display = "table-row";
                document.getElementById("output_message_ultra_only").innerText = "";
              }
@@ -534,8 +436,6 @@
       </script>
    </head>
    <body onload="getResults()">
-      <!-- Optional JavaScript -->
-      <!-- jQuery first, then Popper.js, then Bootstrap JS -->
       <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
       <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
@@ -543,11 +443,10 @@
          <div class="card ml-5 mr-5">
             <div class="card-header">
                <div class="h5"><img src="anficon.png" class="float-left" height="40"></div>
-               <div class="float-left"><span class="h5">&nbsp&nbspAzure NetApp Files datastore TCO Estimator </span><sup class="text-muted">(v1)</sup></div>
+               <div class="float-left"><span class="h5">&nbsp&nbspAzure NetApp Files Datastore TCO Estimator </span><sup class="text-muted">(v1)</sup></div>
             </div>
             <div class="card-body">
                <div class="h5">Sizer Input</div>
-               <!-- <small id="volumewarning" class="form-text text-muted">Minimum volume size is 100GiB. Maximum volume size is 100TiB.</small> -->
                <div class="row">
                   <div class="col input-group mb-3">
                      <div class="input-group-prepend">
@@ -555,7 +454,6 @@
                      </div>
                      <input oninput="getResults()" type="number" class="my-1  form-control" placeholder="" value="400" aria-label="Total VMs" aria-describedby="Volume Size" id="vmcount" required></input>
                   </div>
-                  <!-- <small id="volumewarning" class="form-text text-muted">Minimum volume size is 100GiB. Maximum volume size is 100TiB.</small> -->
                   <div class="col input-group mb-3">
                      <div class="input-group-prepend">
                         <span class="my-1 input-group-text required-field" style="color:#000">vCPU/pCore</span>
@@ -598,9 +496,8 @@
                      </div>
                   </div>
                </div>
-               
+
                <div class="row mb-3">
-                  <!-- <small id="tputwarning" class="form-text text-muted">Storage</small> -->
                   <div class="col">
                      <small id="volumewarning" class="form-text text-muted">vSAN</small>
                      <div class="input-group mb-3">
@@ -613,7 +510,6 @@
                      </div>
                      </div>
                   </div>
-                  <!-- <small id="tputwarning" class="form-text text-muted">Storage</small> -->
                   <div class="col">
                      <small id="volumewarning" class="form-text text-muted">vSAN</small>
                      <div class="input-group mb-3">
@@ -627,7 +523,6 @@
                   </div>
                   </div>
 
-                  <!-- <small id="volumewarning" class="form-text text-muted">Policy</small> -->
                   <div class="col">
                      <small id="volumewarning" class="form-text text-muted">vSAN</small>
                      <div class="input-group mb-3">
@@ -642,7 +537,7 @@
                      </select>
                      </div>
                   </div>
-                  <!-- <small id="volumewarning" class="form-text text-muted">Policy</small> -->
+
                   <div class="col">
                      <small id="volumewarning" class="form-text text-muted">vSAN</small>
                      <div class="input-group mb-3">
@@ -668,7 +563,7 @@
                   </div>
                   <div id="collapseadditionalstorage" style="display:none">
                      <div class="row mb-3">
-                        <!-- <small id="tputwarning" class="form-text text-muted">Storage</small> -->
+
                         <div class="col input-group mb-3">
                            <div class="input-group-prepend">
                               <span class="my-1 input-group-text" style="color:#000">Guest Connected</span>
@@ -678,7 +573,7 @@
                               <label class="btn btn-primary my-1">TB</label>
                            </div>
                         </div>
-                        <!-- <small id="tputwarning" class="form-text text-muted">Storage</small> -->
+
                         <div class="col input-group mb-3">
                            <div class="input-group-prepend">
                               <span class="my-1 input-group-text" style="color:#000">File Services</span>
@@ -688,7 +583,7 @@
                               <label class="btn btn-primary my-1">TB</label>
                            </div>
                         </div>
-                        <!-- <small id="tputwarning" class="form-text text-muted">Storage</small> -->
+
                         <div class="col input-group mb-3">
                            <div class="input-group-prepend">
                               <span class="my-1 input-group-text" style="color:#000">General Purpose</span>
@@ -745,24 +640,15 @@
                      <thead class='thead-light'>
                         <tr>
                            <th class="align-top" width="25%" style="text-align:center">Profile</th>
-                           <!-- <th class="align-top">Host Type</th> -->
-                           <!-- <th class="align-top">VM Count</th> -->
-                           <!-- <th class="align-top">Per VM Storage <br><small class="text-muted">(GB)</small></th> -->
-                           <!-- <th class="align-top">Total Capacity Required</th> -->
                            <th class="align-top">Total Capacity Required</th>
                            <th class="align-top">Host Count</th>
                            <th class="align-top">Total Capacity vSAN <small class="text-muted">(TB)</small></th>
-                           <!-- <th class="align-top">vSAN Overhead <small class="text-muted">(TB)</small></th> -->
-                           <!-- <th class="align-top">Required VM Space</th> -->
                            <th class="align-top">vSAN Storage Capacity <small class="text-muted">(TB)</small></th>
                            <th class="align-top">ANF Storage Capacity <small class="text-muted">(TB)</small></th>
                            <th class="align-top">Free Space Available (vSAN) <small class="text-muted">(TB)</small></th>
-                           <!-- <th class="align-top">Free Space Percent vSAN</th> -->
-                           <!-- <th class="align-top">Profile</th> -->
                            <th class="align-top">TCO One Year AVS</th>
                            <th class="align-top">TCO One Year ANF</th>
                            <th class="align-top">Total One Year TCO</th>
-                           <!-- <th class="align-top">ANF Sizing</th> -->
                            <th class="align-top">TCO Savings</th>
                         </tr>
                      </thead>
@@ -773,48 +659,17 @@
                            </center>
                         </td>
                      </tr>
-                     <!-- <tr>
-                        <td id="avs1_profile"></td>
-                         <td id="avs1_hosttype">AV36</td>
-                        <td id="avs1_vmcount"></td>
-                        <td id="avs1_storagevm"></td>
-                        <td id="avs1_totcapreq"></td>
-                         <td id="avs1_totcapreqvsan"></td>
-                        <td id="avs1_hostcount"></td>
-                        <td id="avs1_totcapvsan"></td>
-                        <td id="avs1_vsanover"></td>
-                        <td id="avs1_reqvmspace"></td>
-                        <td id="avs1_spacevmvsan"></td>
-                        <td id="avs1_spacevmanf">N/A</td>
-                        <td id="avs1_spacefree"></td>
-                        <td id="avs1_spacefreepervsan"></td>
-                         <td id="avs1_profile"></td>
-                        <td id="avs1_tcoavs"></td>
-                        <td id="avs1_tcoanf">N/A</td>
-                        <td id="avs1_tcototal"></td>
-                        <td id="avs1_anfsizing">*</td>
-                        <td id="avs1_tcoopt">N/A</td>
-                        </tr> -->
                      <tr>
                         <td id="avs1_profile"></td>
-                        <!-- <td id="avs2_hosttype">AV36</td> -->
-                        <!-- <td id="avs2_vmcount"></td>
-                           <td id="avs2_storagevm"></td> -->
                         <td id="avs2_totcapreq"></td>
-                        <!--  <td id="avs2_totcapreqvsan"></td> -->
                         <td id="avs2_hostcount"></td>
                         <td id="avs2_totcapvsan"></td>
-                        <!-- <td id="avs2_vsanover"></td> -->
-                        <!-- <td id="avs2_reqvmspace"></td> -->
                         <td id="avs2_spacevmvsan"></td>
                         <td id="avs2_spacevmanf">N/A</td>
                         <td id="avs2_spacefree"></td>
-                        <!-- <td id="avs2_spacefreepervsan"></td> -->
-                        <!-- <td id="avs2_profile"></td> -->
                         <td id="avs2_tcoavs"></td>
                         <td id="avs2_tcoanf">N/A</td>
                         <td id="avs2_tcototal"></td>
-                        <!-- <td id="avs2_anfsizing">*</td> -->
                         <td id="avs2_tcoopt">N/A</td>
                      </tr>
                      <tr>
@@ -852,112 +707,67 @@
                      </tr>
                      <tr id="anf_ultra" class="">
                         <td id="avs8_profile"></td>
-                        <!-- <td id="avs8_hosttype">AV36</td> -->
-                        <!-- <td id="avs8_vmcount"></td>
-                           <td id="avs8_storagevm"></td> -->
                         <td id="avs8_totcapreq"></td>
-                        <!--  <td id="avs8_totcapreqvsan"></td> -->
                         <td id="avs8_hostcount"></td>
                         <td id="avs8_totcapvsan"></td>
-                        <!-- <td id="avs8_vsanover"></td> -->
-                        <!-- <td id="avs8_reqvmspace"></td> -->
                         <td id="avs8_spacevmvsan"></td>
                         <td id="avs8_spacevmanf">N/A</td>
                         <td id="avs8_spacefree"></td>
-                        <!-- <td id="avs8_spacefreepervsan"></td> -->
-                        <!-- <td id="avs8_profile"></td> -->
                         <td id="avs8_tcoavs"></td>
                         <td id="avs8_tcoanf">N/A</td>
                         <td id="avs8_tcototal"></td>
-                        <!-- <td id="avs8_anfsizing">*</td> -->
                         <td id="avs8_tcoopt">N/A</td>
                      </tr>
                      <tr id="anf_pre_ult" class="" style="display: none">
                         <td id="avs9_profile"></td>
-                        <!-- <td id="avs4_hosttype">AV36</td> -->
-                        <!-- <td id="avs4_vmcount"></td>
-                           <td id="avs4_storagevm"></td> -->
                         <td id="avs9_totcapreq"></td>
-                        <!--  <td id="avs4_totcapreqvsan"></td> -->
                         <td id="avs9_hostcount"></td>
                         <td id="avs9_totcapvsan"></td>
-                        <!-- <td id="avs9_vsanover"></td> -->
-                        <!--  <td id="avs4_reqvmspace"></td> -->
                         <td id="avs9_spacevmvsan"></td>
                         <td id="avs9_spacevmanf">N/A</td>
                         <td id="avs9_spacefree"></td>
-                        <!-- <td id="avs4_spacefreepervsan"></td> -->
-                        <!-- <td id="avs4_profile"></td> -->
                         <td id="avs9_tcoavs"></td>
                         <td id="avs9_tcoanf">N/A</td>
                         <td id="avs9_tcototal"></td>
-                        <!-- <td id="avs4_anfsizing">*</td> -->
                         <td id="avs9_tcoopt">N/A</td>
                      </tr>
                      <tr id="anf_premium" class="">
                         <td id="avs3_profile"></td>
-                        <!-- <td id="avs3_hosttype">AV36</td> -->
-                        <!-- <td id="avs3_vmcount"></td>
-                           <td id="avs3_storagevm"></td> -->
                         <td id="avs3_totcapreq"></td>
-                        <!--  <td id="avs3_totcapreqvsan"></td> -->
                         <td id="avs3_hostcount"></td>
                         <td id="avs3_totcapvsan"></td>
-                        <!-- <td id="avs3_vsanover"></td> -->
-                        <!-- <td id="avs3_reqvmspace"></td> -->
                         <td id="avs3_spacevmvsan"></td>
                         <td id="avs3_spacevmanf">N/A</td>
                         <td id="avs3_spacefree"></td>
-                        <!-- <td id="avs3_spacefreepervsan"></td> -->
-                        <!-- <td id="avs3_profile"></td> -->
                         <td id="avs3_tcoavs"></td>
                         <td id="avs3_tcoanf">N/A</td>
                         <td id="avs3_tcototal"></td>
-                        <!-- <td id="avs3_anfsizing">*</td> -->
                         <td id="avs3_tcoopt">N/A</td>
                      </tr>
                      <tr id="anf_pre_std" class="" style="display: none">
                         <td id="avs4_profile"></td>
-                        <!-- <td id="avs4_hosttype">AV36</td> -->
-                        <!-- <td id="avs4_vmcount"></td>
-                           <td id="avs4_storagevm"></td> -->
                         <td id="avs4_totcapreq"></td>
-                        <!--  <td id="avs4_totcapreqvsan"></td> -->
                         <td id="avs4_hostcount"></td>
                         <td id="avs4_totcapvsan"></td>
-                        <!-- <td id="avs4_vsanover"></td> -->
-                        <!--  <td id="avs4_reqvmspace"></td> -->
                         <td id="avs4_spacevmvsan"></td>
                         <td id="avs4_spacevmanf">N/A</td>
                         <td id="avs4_spacefree"></td>
-                        <!-- <td id="avs4_spacefreepervsan"></td> -->
-                        <!-- <td id="avs4_profile"></td> -->
                         <td id="avs4_tcoavs"></td>
                         <td id="avs4_tcoanf">N/A</td>
                         <td id="avs4_tcototal"></td>
-                        <!-- <td id="avs4_anfsizing">*</td> -->
                         <td id="avs4_tcoopt">N/A</td>
                      </tr>
                      <tr id="anf_standard" class="">
                         <td id="avs7_profile"></td>
-                        <!-- <td id="avs7_hosttype">AV36</td> -->
-                        <!-- <td id="avs7_vmcount"></td>
-                           <td id="avs7_storagevm"></td> -->
                         <td id="avs7_totcapreq"></td>
-                        <!--  <td id="avs7_totcapreqvsan"></td> -->
                         <td id="avs7_hostcount"></td>
                         <td id="avs7_totcapvsan"></td>
-                        <!-- <td id="avs7_vsanover"></td> -->
-                        <!--  <td id="avs7_reqvmspace"></td> -->
                         <td id="avs7_spacevmvsan"></td>
                         <td id="avs7_spacevmanf">N/A</td>
                         <td id="avs7_spacefree"></td>
-                        <!-- <td id="avs7_spacefreepervsan"></td> -->
-                        <!-- <td id="avs7_profile"></td> -->
                         <td id="avs7_tcoavs"></td>
                         <td id="avs7_tcoanf">N/A</td>
                         <td id="avs7_tcototal"></td>
-                        <!-- <td id="avs7_anfsizing">*</td> -->
                         <td id="avs7_tcoopt">N/A</td>
                      </tr>
                      <tr>
@@ -969,47 +779,28 @@
                      </tr>
                      <tr id="anf_dr" class="">
                         <td id="avs5_profile"></td>
-                        <!-- <td id="avs5_hosttype">AV36</td> -->
-                        <!-- <td id="avs5_vmcount"></td>
-                           <td id="avs5_storagevm"></td> -->
                         <td id="avs5_totcapreq"></td>
-                        <!--  <td id="avs5_totcapreqvsan"></td> -->
                         <td id="avs5_hostcount"></td>
                         <td id="avs5_totcapvsan"></td>
-                        <!-- <td id="avs5_vsanover"></td> -->
-                        <!-- <td id="avs5_reqvmspace"></td> -->
                         <td id="avs5_spacevmvsan"></td>
                         <td id="avs5_spacevmanf">N/A</td>
                         <td id="avs5_spacefree"></td>
-                        <!-- <td id="avs5_spacefreepervsan"></td> -->
-                        <!-- <td id="avs5_profile"></td> -->
                         <td id="avs5_tcoavs"></td>
                         <td id="avs5_tcoanf">N/A</td>
                         <td id="avs5_tcototal"></td>
-                        <!-- <td id="avs5_anfsizing">*</td> -->
                         <td id="avs5_tcoopt">N/A</td>
                      </tr>
                      <tr id="anf_dr_zero" class="" style="display:none">
-                        <!-- style="background-color: #e9ecef;" -->
                         <td id="avs6_profile"></td>
-                        <!-- <td id="avs6_hosttype">AV36</td> -->
-                        <!-- <td id="avs6_vmcount"></td>
-                           <td id="avs6_storagevm"></td> -->
                         <td id="avs6_totcapreq"></td>
-                        <!--  <td id="avs6_totcapreqvsan"></td> -->
                         <td id="avs6_hostcount"></td>
                         <td id="avs6_totcapvsan"></td>
-                        <!-- <td id="avs6_vsanover"></td> -->
-                        <!-- <td id="avs6_reqvmspace"></td> -->
                         <td id="avs6_spacevmvsan"></td>
                         <td id="avs6_spacevmanf">N/A</td>
                         <td id="avs6_spacefree"></td>
-                        <!-- <td id="avs6_spacefreepervsan"></td> -->
-                        <!-- <td id="avs6_profile"></td> -->
                         <td id="avs6_tcoavs"></td>
                         <td id="avs6_tcoanf">N/A</td>
                         <td id="avs6_tcototal"></td>
-                        <!-- <td id="avs6_anfsizing">*</td> -->
                         <td id="avs6_tcoopt">N/A</td>
                      </tr>
                   </table>
@@ -1018,7 +809,6 @@
                   <center><small id="output_message_std" class="text-danger"></small></center>
                   <center><small id="output_message_std_zero" class="text-danger"></small></center>
                   <center><small id="output_message_ultra_only" class="text-danger"></small></center>
-                  <!-- <small class="text-primary">Blue text indicates volume is sized for throughput.</small><br> -->
                   <small>Host type considered for calculations is <b>AV36</b></small><br>
                </div>
             </div>
